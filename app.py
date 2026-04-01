@@ -16,7 +16,7 @@ EXIT_SOP = {
     "✅ 行政程序查核": ["臨床衝擊評估 (PI 已完成)", "技術切斷 (API/VM 移除)", "資料封存", "更新透明性網頁紀錄"]
 }
 
-DB_NAME = "final_exit_v700.csv"
+DB_NAME = "final_exit_v800.csv"
 
 def init_db():
     if not os.path.exists(DB_NAME):
@@ -25,7 +25,7 @@ def init_db():
         pd.DataFrame(columns=cols).to_csv(DB_NAME, index=False)
 
 # --- 3. 評審填報介面 (手機端) ---
-def reviewer_view(p_target):
+def reviewer_page(p_target):
     st.markdown(f"## 🏛️ AI 退場評審填報端")
     st.error(f"📍 當前審議專案：{p_target}")
     
@@ -53,16 +53,16 @@ def reviewer_view(p_target):
         df = pd.concat([df, pd.DataFrame([row])], ignore_index=True)
         df.to_csv(DB_NAME, index=False)
         
-        # ✨ 氣球特效與感謝語 ✨
+        # ✨ 氣球特效 ✨
         st.balloons()
-        st.success(f"✅ 提交成功！謝謝 {voter} 委員的評分與專業建議。")
+        st.success(f"✅ 提交成功！謝謝 {voter} 委員的評分。")
         
-        time.sleep(2.5)
+        time.sleep(2)
         st.query_params.clear()
         st.rerun()
 
 # --- 4. 看板端介面 (電腦端) ---
-def admin_view():
+def admin_dashboard():
     with st.sidebar:
         st.title("⚙️ 管理選單")
         if st.button("🗑️ 清空所有數據"):
@@ -91,7 +91,7 @@ def admin_view():
     curr = st.selectbox("🎯 選擇顯示專案：", projs)
     st.markdown(f"<h1 style='text-align:center;'>📊 {curr} - 退場審議看板</h1>", unsafe_allow_html=True)
     
-    # 🔗 請更換為您的正式網址
+    # 🔗 自動校對網址
     base_url = "https://ai-exit-system.streamlit.app" 
     vote_link = f"{base_url}/?m=vote&t={urllib.parse.quote(curr)}"
     
@@ -107,11 +107,9 @@ def admin_view():
         df_u = df_p.sort_values("Time").drop_duplicates(subset=["Voter"], keep="last")
         v_count = len(df_u)
 
-        # 頂部統計指標
         col1, col2 = st.columns(2)
         col1.metric("已參與評審人數", f"{v_count} 人")
         
-        # 判定是否觸發紅燈
         direct_items = EXIT_SOP["🛑 直接退場條件"]
         triggered_red = any(df_u[it].sum() > 0 for it in direct_items)
         if triggered_red:
@@ -150,9 +148,9 @@ def admin_view():
     else:
         st.warning("目前尚無評審填報數據。")
 
-# --- 5. 路由 ---
+# --- 5. 核心路由 (名稱校對版) ---
 params = st.query_params
 if params.get("m") == "vote" and params.get("t"):
-    reviewer_page(params.get("t"))
+    reviewer_page(params.get("t")) # 這裡原本寫錯了，現在修好了
 else:
-    admin_view()
+    admin_dashboard() # 這裡原本也寫錯了，現在修好了
